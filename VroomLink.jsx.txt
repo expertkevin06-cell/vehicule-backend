@@ -1,0 +1,88 @@
+import { useState } from 'react';
+import { ExternalLink, Save, Sparkles } from 'lucide-react';
+
+export default function VroomLink() {
+  const [texteCollé, setTexteCollé] = useState('');
+  const [resultat, setResultat] = useState(null);
+  const [chargement, setChargement] = useState(false);
+  const [erreur, setErreur] = useState('');
+
+  const ouvrirVroom = () => {
+    window.open('https://vroom.pro/', '_blank', 'noopener,noreferrer');
+  };
+
+  const interpreterAvecIA = async () => {
+    setChargement(true);
+    setErreur('');
+    setResultat(null);
+
+    try {
+      const res = await fetch('/api/vroom/interpreter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ texte: texteCollé }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErreur(data.erreur || 'Une erreur est survenue.');
+      } else {
+        setResultat(data);
+      }
+    } catch (e) {
+      setErreur('Impossible de contacter le serveur.');
+    } finally {
+      setChargement(false);
+    }
+  };
+
+  return (
+    <div className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-sm border border-slate-200">
+      <h2 className="text-lg font-semibold text-slate-800 mb-4">Dossier VROOM Expertise</h2>
+
+      <button
+        onClick={ouvrirVroom}
+        className="w-full flex items-center justify-center gap-2 bg-slate-800 text-white py-3 rounded-lg hover:bg-slate-700 transition"
+      >
+        <ExternalLink size={18} />
+        Ouvrir VROOM.PRO
+      </button>
+
+      <p className="text-sm text-slate-500 mt-4 mb-2">
+        Fais ta recherche sur le site, puis colle ici tout ce que tu vois (peu importe le format) :
+      </p>
+
+      <textarea
+        value={texteCollé}
+        onChange={(e) => setTexteCollé(e.target.value)}
+        placeholder="Colle ici les infos copiées depuis VROOM.PRO"
+        className="w-full border border-slate-300 rounded-lg p-3 text-sm min-h-[110px] focus:outline-none focus:ring-2 focus:ring-slate-400"
+      />
+
+      <button
+        onClick={interpreterAvecIA}
+        disabled={!texteCollé.trim() || chargement}
+        className="w-full mt-3 flex items-center justify-center gap-2 bg-indigo-600 text-white py-2.5 rounded-lg hover:bg-indigo-700 transition disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        <Sparkles size={16} />
+        {chargement ? 'Analyse en cours...' : "Organiser avec l'IA"}
+      </button>
+
+      {erreur && (
+        <p className="text-sm text-red-600 mt-3">{erreur}</p>
+      )}
+
+      {resultat && (
+        <div className="mt-4 bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm space-y-1.5">
+          <p><span className="text-slate-500">N° dossier :</span> {resultat.numero_dossier || '—'}</p>
+          <p><span className="text-slate-500">Véhicule :</span> {resultat.vehicule?.marque} {resultat.vehicule?.modele} {resultat.vehicule?.immatriculation && `(${resultat.vehicule.immatriculation})`}</p>
+          <p><span className="text-slate-500">VIN :</span> {resultat.vehicule?.vin || '—'}</p>
+          <p><span className="text-slate-500">Statut :</span> {resultat.statut_dossier || '—'}</p>
+          <p><span className="text-slate-500">Assureur :</span> {resultat.assureur || '—'}</p>
+          <p><span className="text-slate-500">Réparateur :</span> {resultat.reparateur || '—'}</p>
+          <p><span className="text-slate-500">Montant :</span> {resultat.montant || '—'}</p>
+        </div>
+      )}
+    </div>
+  );
+}
