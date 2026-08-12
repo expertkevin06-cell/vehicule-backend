@@ -13,7 +13,8 @@ const catalogueRoutes = require('./routes/catalogue');
 app.use('/api/catalogue', catalogueRoutes);
 
 const rappelsRoutes = require('./routes/rappels');
-app.use('/api/rappels', rappelsRoutes);
+app.use('/api/rappels', rappelsRoutes);const pannesRoutes = require('./routes/pannes');
+app.use('/api/pannes', pannesRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
